@@ -9,6 +9,11 @@ module debouncer
 		input wire sw,
 		output reg db_level,
 		output reg db_tick
+		// 预留若干调试用输出引脚
+		`ifdef DEBUG_MODE
+			,output reg [3:0] debug1
+			,output reg [3:0] debug2
+		`endif
 	);
 
 // 状态寄存器相关常量和变量定义
@@ -31,7 +36,12 @@ end
 
 // 递减计数器相关常量和变量定义
 localparam CLK_PERIOD_NS = (1_000_000_000 / CLK_FREQ_HZ);// 例如: 频率=50MHz则周期=20ns; 频率=100MHz则周期=10ns
-localparam N = log2(1_000_000 * (INTERVAL_MS/CLK_PERIOD_NS));// 例如: 令2^N * 20ns ≈ 40ms, 则N=log2(40ms/20ns)=21（其中1ms=1_000_000ns）
+`ifdef DEBUG_MODE
+	localparam N = 26;// 2^26 * 20ns ≈ 1.34s 放慢速度便于调试
+`endif
+`ifndef DEBUG_MODE
+	localparam N = log2(1_000_000 * (INTERVAL_MS/CLK_PERIOD_NS));// 例如: 令2^N * 20ns ≈ 40ms, 则N=log2(40ms/20ns)=21（其中1ms=1_000_000ns）
+`endif
 localparam CNT_VALUE_MAX = {N{1'b1}};// 递减计数器最大值=(2^N - 1)
 localparam CNT_VALUE_0 = {N{1'b0}};
 reg [N-1:0] cnt_reg;
@@ -132,5 +142,22 @@ function integer log2(input integer x);
 		end
 	end
 endfunction
+
+`ifdef DEBUG_MODE
+	// 调试输出
+	always @(posedge clk, posedge reset)
+	begin
+		if (reset)
+			begin
+				debug1 <= 4'b0000;
+				debug2 <= 4'b0000;
+			end
+		else
+			begin
+				debug1 <= {3'b000, cnt_end_tick};
+				debug2 <= {1'b0, cnt_reg[N-1:N-3]};
+			end
+	end
+`endif
 
 endmodule
