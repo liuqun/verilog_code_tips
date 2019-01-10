@@ -1,7 +1,7 @@
 module uart_rx
 	#(
 	parameter N_DATA_BITS = 8, // 串口数据位个数, 取值范围: 5, 6, 7, 8, 默认值: 8位
-	          HOW_MANY_TICKS_FOR_STOP_BIT = 16
+	parameter HOW_MANY_TICKS_FOR_STOP_BIT = 16 // 停止位长度对应的节拍数, 取值16/24/32依次代表停止位=1/1.5/2位, 默认值16表示停止位=1位
 	)
 	(
 	input wire clk,
